@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		>
+
+	<com.example.androidtestcamera4.MySurfaceView
+			android:id="@+id/mySurfaceView"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:background="@android:color/transparent"
+			/>
+
+	<SurfaceView
+			android:id="@+id/surfaceViewPreview"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			/>
+
+	<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="horizontal"
+			android:background="@android:color/transparent"
+			>
+
+		<!-- buttons -->
+		<LinearLayout
+				android:layout_width="wrap_content" 
+				android:layout_height="match_parent"
+				android:orientation="vertical"
+				>
+			<ToggleButton
+					android:id="@+id/buttonFlash"
+					android:layout_width="51dp"
+					android:layout_height="51dp"
+					android:background="@drawable/button_flash"
+					/>
+			<Button
+					android:id="@+id/buttonMenu"
+					android:layout_width="51dp"
+					android:layout_height="51dp"
+					android:background="@drawable/button_menu"
+					/>
+			<ToggleButton
+					android:id="@+id/buttonLocation"
+					android:layout_width="51dp"
+					android:layout_height="51dp"
+					android:background="@drawable/button_location"
+					/>
+			<ToggleButton
+					android:id="@+id/buttonDay"
+					android:layout_width="51dp"
+					android:layout_height="51dp"
+					android:background="@drawable/button_day"
+					/>
+		</LinearLayout>
+		<!-- dummy -->
+		<LinearLayout
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="match_parent"
+				/>
+		<RelativeLayout
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:background="@android:color/transparent"
+				>
+			<Button
+					android:id="@+id/buttonShutter"
+					android:layout_width="62dp"
+					android:layout_height="179dp"
+					android:background="@drawable/button_shutter"
+					android:layout_centerVertical="true"
+					/>
+			<ToggleButton
+					android:textOn="" android:textOff=""
+					android:id="@+id/buttonThumbnail"
+					android:layout_width="54dp"
+					android:layout_height="54dp"
+					android:background="@drawable/button_thumbnail"
+					android:layout_alignParentBottom="true"
+					/>
+		</RelativeLayout>
+	</LinearLayout>
+</FrameLayout>
