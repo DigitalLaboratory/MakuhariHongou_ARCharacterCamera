@@ -4,42 +4,54 @@
 		name: "せんとくん",
 		longitude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "© NARA pref.",
+		profile: "性格: 元気いっぱいで行動力にあふれている。温故知新を地でいき、好奇心旺盛でやんちゃ。\n特技: 自分のエネルギーをまわりの人たちに伝えるのが得意。\n好きなこと: 自分が見てきた奈良の歴史を伝えること。自分が生まれた奈良を好きになってもらうこと。"
 	}
 	{
 		path: "arukuma",
 		name: "アルクマ",
 		longitude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "",
+		profile: "信州だけに出没する、大変珍しいクマ。\nクマなのに寒がりで、いつも頭にかぶりもの。\nクマなのに旅好きで、いつも背中にリュックサック。\n信州をクマなく歩きまくり、信州の魅力を世の中にクマなく広めるのが生きがい。"
 	}
 	{
 		path: "kumamon",
 		name: "くまモン",
 		longintude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "©2010 Kumamoto pref. kumamon#0000",
+		profile: "ボクの仕事は、身近にあるサプライズ＆ハッピーを見つけて、全国のみんなに知ってもらうこと。魅力いっぱいの熊本とボクのことを、これからもよろしくま！"
 	}
 	{
 		path: "gunmachan",
 		name: "ぐんまちゃん",
 		longitude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "",
+		profile: "群馬のマスコット\nモチーフはボニーです。"
 	}
 	{
 		path: "shiromaruhime",
 		name: "しろまるひめ",
 		longitude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "",
+		profile: "性別: 女の子\n誕生日: 4 月 6 日 (しろの日)\n生誕地: 姫路城内 (西の丸で産湯につかりました)\n性格: 体と同じく柔軟で優しい\nチャームポイント: 色白のもち肌\nトレードマーク: 姫路城の防止、桜の髪飾り\n趣味: 城内・城下お散歩、好古園でお茶すること\nとっておきの特技: 歌\n好きな食べ物: 和菓子 (特にお団子には目がない) ただし現在ダイエット中。"
 	}
 	{
 		path: "fukkachan",
 		name: "ふっかちゃん",
 		longitude: 0.0,
 		latitude: 0.0,
-		radius: 100.0
+		radius: 100.0,
+		copyright: "",
+		profile: "ウサギのようでシカのような架空の生命体、名産「深谷ネギ」のしなやかで豪快なつのが特徴\nとてもカワイイ、あま～いマスクで深谷市の魅力を発信中！"
 	}
 ]
 	

@@ -53,10 +53,13 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
+		Log.d(TAG, "surfaceCreated()!");
+		surfaceHolder = holder;
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
+		Log.d(TAG, "surfaceDestroyed()!");
 	}
 
 	@Override
@@ -124,10 +127,10 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 		switch (MyApplication.characterManager.getCharacterMode()) {
 		case CharacterManager.MODE_STOP:
 		case CharacterManager.MODE_FLOAT:
-			int x = (int)Math.floor(event2.getX());
-			int y = (int)Math.floor(event2.getY());
+			int x = (int)event2.getX();
+			int y = (int)event2.getY();
 			if (MyApplication.characterManager.hits(x, y)) {
-				MyApplication.characterManager.setCharacterCenter(x, y);
+				MyApplication.characterManager.setCharacterCenter(screenWidth, screenHeight, x, y);
 				MyApplication.vibrator.vibrate(5);
 				MySurfaceView.this.invalidate();
 			}
@@ -153,8 +156,8 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
-		int x = (int)Math.floor(event.getX());
-		int y = (int)Math.floor(event.getY());
+		int x = (int)event.getX();
+		int y = (int)event.getY();
 		if (MyApplication.characterManager.hits(x, y)) {
 			switch (MyApplication.characterManager.getCharacterMode()) {
 			case CharacterManager.MODE_STOP:

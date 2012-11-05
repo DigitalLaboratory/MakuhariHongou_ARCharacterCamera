@@ -1,8 +1,5 @@
 package com.example.androidtestcamera4;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -57,6 +54,11 @@ public class CharacterManager {
 	}
 
 	public Map<String, Object> getCharacterInfo() {
+		if (characterInfoMapList != null) {
+			if (characterIndex >= 0) {
+				return characterInfoMapList.get(characterIndex);
+			}
+		}
 		return null;
 	}
 
@@ -71,9 +73,12 @@ public class CharacterManager {
 	private int poseIndex = 0;
 	private Bitmap bitmap = null;
 	private Bitmap scaledBitmap = null;
+	private Bitmap logoBitmap = null;
 	private int centerX;
 	private int centerY;
 	private float scaleFactor = 1.0f;
+	private int targetX;
+	private int targetY;
 
 	public void setCurrentCharacter() {
 		characterIndex = 0;
@@ -82,16 +87,67 @@ public class CharacterManager {
 		InputStream is;
 		try {
 			is = context.getResources().getAssets().open(sPath);
-			bitmap = BitmapFactory.decodeStream(is);
+			try {
+				bitmap = BitmapFactory.decodeStream(is);
+			} finally {
+				is.close();
+			}
 			scaledBitmap = bitmap.copy(bitmap.getConfig(), false);
+
+			sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/logo/02.png";
+			is = context.getResources().getAssets().open(sPath);
+			try {
+				logoBitmap = BitmapFactory.decodeStream(is);
+			} finally {
+				is.close();
+			}
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
-		centerX = 640;
-		centerY = 480;
+//		centerX = 100;
+//		centerY = 100;
 	}
 
-	public Bitmap getCharacterBitmap() {
+	public Bitmap getLogoBitmapForPrinting() {
+		Bitmap logoBitmap = null;
+		if (bitmap != null) {
+			String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/logo/01.png";
+			InputStream is;
+			try {
+				is = context.getResources().getAssets().open(sPath);
+				try {
+					logoBitmap = BitmapFactory.decodeStream(is);
+				} finally {
+					is.close();
+				}
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+				logoBitmap = null;
+			}
+		}
+		return logoBitmap;
+	}
+	public Bitmap getCharacterBitmapForPrinting() {
+		Bitmap characterBitmap = null;
+		if (bitmap != null) {
+			String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha700/" + String.format("%02d.png", characterIndex + 1);
+			InputStream is;
+			try {
+				is = context.getResources().getAssets().open(sPath);
+				try {
+					characterBitmap = BitmapFactory.decodeStream(is);
+				} finally {
+					is.close();
+				}
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+				characterBitmap = null;
+			}
+		}
+		return characterBitmap;
+	}
+
+	public Bitmap getCharacterScaledBitmap() {
 //		return bitmap;
 		return scaledBitmap;
 	}
@@ -101,10 +157,11 @@ public class CharacterManager {
 	public int getCharacterCenterY() {
 		return centerY;
 	}
-	public void setCharacterCenter(int x, int y) {
+	public void setCharacterCenter(int screenWidth, int screenHeight, int x, int y) {
 		if (bitmap != null) {
 			centerX = x;
 			centerY = y;
+			// scaleFactor を如何に定むるか
 		}
 	}
 
@@ -123,8 +180,15 @@ public class CharacterManager {
 			}
 			Paint paint = new Paint();
 			paint.setColor(Color.WHITE); // why white?
-			Rect rect = new Rect();
 			canvas.drawBitmap(scaledBitmap, centerX - (scaledBitmap.getWidth() >> 1), centerY - (scaledBitmap.getHeight() >> 1), paint);
+
+			Rect sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
+			Rect destinationRect = new Rect();
+			destinationRect.left = 10 + 0;
+			destinationRect.top = 10 + 0;
+			destinationRect.right = 10 + canvas.getWidth() * 277 / 640;
+			destinationRect.bottom = 10 + destinationRect.right * 56 / 227;
+			canvas.drawBitmap(logoBitmap, sourceRect, destinationRect, null);
 		}
 	}
 
@@ -132,6 +196,14 @@ public class CharacterManager {
 		return bitmap != null
 				&& centerX - (scaledBitmap.getWidth() >> 1) <= x && x <= centerX + (scaledBitmap.getWidth() >> 1)
 				&& centerY - (scaledBitmap.getHeight() >> 1) <= y && y <= centerY + (scaledBitmap.getHeight() >> 1);
+	}
+
+	public boolean isOnScreen(int screenWidth, int screenHeight, int x, int y) {
+		return bitmap != null
+				&& x + (scaledBitmap.getWidth() >> 1) > 0
+				&& x - (scaledBitmap.getWidth() >> 1) < screenWidth
+				&& y + (scaledBitmap.getHeight() >> 1) > 0
+				&& y - (scaledBitmap.getHeight() >> 1) < screenHeight;
 	}
 
 	public final static int MODE_STOP = 0; // 画面にて 停れり
@@ -150,5 +222,10 @@ public class CharacterManager {
 			this.scaleFactor *= scaleFactor;
 			scaledBitmap = Bitmap.createScaledBitmap(bitmap, (int)(bitmap.getWidth() * this.scaleFactor), (int)(bitmap.getHeight() * this.scaleFactor), false);
 		}
+	}
+
+	public void startMoving(int screenWidth, int screenHeight) {
+		targetX = screenWidth >> 1;
+		targetY = screenHeight >> 1;
 	}
 }

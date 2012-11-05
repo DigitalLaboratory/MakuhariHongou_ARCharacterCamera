@@ -2,6 +2,7 @@ package com.example.androidtestcamera4;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -79,24 +80,6 @@ public class Sensors {
 					location.getAccuracy(),
 					new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date(location.getTime())));
 //			Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
-			try {
-				List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-				if (addressList != null) {
-					Address address = addressList.get(0);
-					String sAddress = "";
-					for (int i = 0;  ;  ++i) {
-						String sAddressLine = address.getAddressLine(i);
-						if (sAddressLine != null) {
-							sAddress += sAddressLine + "\n";
-						} else {
-							break;
-						}
-					}
-					Toast.makeText(context, sAddress, Toast.LENGTH_SHORT).show();
-				}
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
 		}
 
 		@Override
@@ -137,4 +120,38 @@ public class Sensors {
 			}
 		}
 	};
+
+	public Location getLocation() {
+		synchronized (locationListener) {
+			return location;
+		}
+	}
+
+	public String[] getAddressLines() {
+		synchronized (locationListener) {
+			if (location == null) {
+				return null;
+			}
+			try {
+				List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+				if (addressList == null) {
+					return null;
+				}
+				Address address = addressList.get(0);
+				ArrayList<String> sAddressLineList = new ArrayList<String>();
+				for (int i = 0;  ;  ++i) {
+					String sAddressLine = address.getAddressLine(i);
+					if (sAddressLine != null) {
+						sAddressLineList.add(sAddressLine);
+					} else {
+						break;
+					}
+				}
+				return sAddressLineList.toArray(new String[sAddressLineList.size()]);
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+				return null;
+			}
+		}
+	}
 }

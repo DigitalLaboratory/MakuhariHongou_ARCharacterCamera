@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@+id/layout"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
+		android:background="@android:color/background_dark"
+		android:layout_gravity="center_horizontal|center_vertical"
 		>
 
 	<com.example.androidtestcamera4.MySurfaceView
 			android:id="@+id/mySurfaceView"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
 			android:background="@android:color/transparent"
 			/>
 
 	<SurfaceView
 			android:id="@+id/surfaceViewPreview"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
 			/>
 
 	<LinearLayout
+			android:id="@+id/linearLayoutButtons"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:orientation="horizontal"
@@ -32,9 +36,14 @@
 				>
 			<ToggleButton
 					android:id="@+id/buttonFlash"
+					android:textOn="" android:textOff=""
 					android:layout_width="51dp"
 					android:layout_height="51dp"
 					android:background="@drawable/button_flash"
+					/>
+			<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="17dp"
 					/>
 			<Button
 					android:id="@+id/buttonMenu"
@@ -42,17 +51,29 @@
 					android:layout_height="51dp"
 					android:background="@drawable/button_menu"
 					/>
+			<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="17dp"
+					/>
 			<ToggleButton
 					android:id="@+id/buttonLocation"
+					android:textOn="" android:textOff=""
 					android:layout_width="51dp"
 					android:layout_height="51dp"
 					android:background="@drawable/button_location"
+					android:checked="true"
+					/>
+			<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="17dp"
 					/>
 			<ToggleButton
 					android:id="@+id/buttonDay"
+					android:textOn="" android:textOff=""
 					android:layout_width="51dp"
 					android:layout_height="51dp"
 					android:background="@drawable/button_day"
+					android:checked="true"
 					/>
 		</LinearLayout>
 		<!-- dummy -->
@@ -73,8 +94,7 @@
 					android:background="@drawable/button_shutter"
 					android:layout_centerVertical="true"
 					/>
-			<ToggleButton
-					android:textOn="" android:textOff=""
+			<Button
 					android:id="@+id/buttonThumbnail"
 					android:layout_width="54dp"
 					android:layout_height="54dp"

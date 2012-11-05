@@ -9,4 +9,5 @@
 	<string name="DEFAULT_LATITUDE">35.658</string>
 	<string name="DEFAULT_ALTITUDE">24.39</string>
 
+	<string name="DATE_FORMAT">yyyy/MM/dd HH:mm</string>
 </resources>
