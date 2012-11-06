@@ -88,13 +88,9 @@ public class MainActivity extends Activity {
 	public void onStart() {
 		super.onStart();
 		Log.d(TAG, "onStart()");
-
-		MyApplication.sensors.start();
 	}
 	@Override
 	public void onStop() {
-		MyApplication.sensors.stop();
-
 		Log.d(TAG, "onStop()");
 		super.onStop();
 	}

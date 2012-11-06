@@ -45,18 +45,21 @@ public class Sensors {
 		Log.d(TAG, "accelerometer: " + accelerometer.getName());
 		Log.d(TAG, "magneticFieldSensor: " + magneticFieldSensor.getName());
 		Log.d(TAG, "gyroscope: " + gyroscope.getName());
+//		Log.d(TAG, "gyroscope min:" + gyroscope.getMinDelay());
 		geocoder = new Geocoder(context, Locale.getDefault());
 	}
 
 	public void start() {
+		Log.d(TAG, "start()");
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0.0f, locationListener);
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0.0f, locationListener);
-		sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
-		sensorManager.registerListener(sensorEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_UI);
-		sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_UI);
+		sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		sensorManager.registerListener(sensorEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
+		sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 
 	public void stop() {
+		Log.d(TAG, "stop()");
 		locationManager.removeUpdates(locationListener);
 		sensorManager.unregisterListener(sensorEventListener, accelerometer);
 		sensorManager.unregisterListener(sensorEventListener, magneticFieldSensor);
@@ -99,6 +102,15 @@ public class Sensors {
 		}
 	};
 
+	private float[] accelerometerValues = null;
+	private float[] magneticFieldValues = null;
+	private float[] inclination = new float[16];
+	private float[] rotation0 = new float[16];
+	private float[] rotation1 = new float[16];
+	private float[] orientationValues = new float[3];
+
+	private float[] gyroscopeValues = new float[3];
+
 	private SensorEventListener sensorEventListener = new SensorEventListener() {
 		@Override
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -107,19 +119,62 @@ public class Sensors {
 
 		@Override
 		public void onSensorChanged(SensorEvent event) {
-			String sSensorName = event.sensor.getName();
-			if (accelerometer.getName().equals(sSensorName)) {
-				
-			} else if (magneticFieldSensor.getName().equals(sSensorName)) {
-				
-			} else if (gyroscope.getName().equals(sSensorName)) {
-				
-			} else {
-				Log.e(TAG, "unknown sensor: " + sSensorName);
+			switch (event.sensor.getType()) {
+			case Sensor.TYPE_ACCELEROMETER:
+				accelerometerValues = event.values.clone();
+				break;
+			case Sensor.TYPE_MAGNETIC_FIELD:
+				magneticFieldValues = event.values.clone();
+				break;
+			case Sensor.TYPE_GYROSCOPE:
+//				if (event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
+//					return;
+//				}
+				gyroscopeValues = event.values.clone();
+				for (GyroscopeListener gyroscopeListener: gyroscopeListenerList) {
+					gyroscopeListener.onEvent(gyroscopeValues);
+				}
 				return;
+			default:
+				return;
+			}
+
+			if (accelerometerValues == null || magneticFieldValues == null) {
+				return;
+			}
+			synchronized (orientationValues) {
+				SensorManager.getRotationMatrix(rotation0, inclination, accelerometerValues, magneticFieldValues);
+				SensorManager.remapCoordinateSystem(rotation0, SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X, rotation1);
+				SensorManager.remapCoordinateSystem(rotation1, SensorManager.AXIS_Y, SensorManager.AXIS_X, rotation0);
+				SensorManager.getOrientation(rotation0, orientationValues);
+				for (OrientationListener orientationListener: orientationListenerList) {
+					orientationListener.onEvent(orientationValues);
+				}
 			}
 		}
 	};
+
+	public interface OrientationListener {
+		public void onEvent(float[] orientationValues);
+	}
+	private List<OrientationListener> orientationListenerList = new ArrayList<OrientationListener>();
+	public void addOrientationListener(OrientationListener orientationListener) {
+		orientationListenerList.add(orientationListener);
+	}
+	public void removeOrientationListener(OrientationListener orientationListener) {
+		orientationListenerList.remove(orientationListener);
+	}
+
+	public interface GyroscopeListener {
+		public void onEvent(float[] gyroscopeValues);
+	}
+	private List<GyroscopeListener> gyroscopeListenerList = new ArrayList<GyroscopeListener>();
+	public void addGyroscopeListener(GyroscopeListener gyroscopeListener) {
+		gyroscopeListenerList.add(gyroscopeListener);
+	}
+	public void removeGyroscopeListener(GyroscopeListener gyroscopeListener) {
+		gyroscopeListenerList.remove(gyroscopeListener);
+	}
 
 	public Location getLocation() {
 		synchronized (locationListener) {

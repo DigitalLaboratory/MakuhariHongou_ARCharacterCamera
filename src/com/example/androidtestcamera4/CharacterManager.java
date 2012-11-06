@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import net.arnx.jsonic.JSON;
 
@@ -77,13 +79,21 @@ public class CharacterManager {
 	private int centerX;
 	private int centerY;
 	private float scaleFactor = 1.0f;
-	private int targetX;
-	private int targetY;
 
 	public void setCurrentCharacter() {
 		characterIndex = 0;
-		poseIndex = 0;
-		String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha300/" + String.format("%02d.png", poseIndex + 1);
+		String sPath;
+		for (;  ;  ) {
+			poseIndex = (int)Math.floor(Math.random() * 12);
+			sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha300/" + String.format("%02d.png", poseIndex + 1);
+			try {
+				InputStream is = context.getResources().getAssets().open(sPath);
+				is.close();
+			} catch (IOException e) {
+				continue;
+			}
+			break;
+		}
 		InputStream is;
 		try {
 			is = context.getResources().getAssets().open(sPath);
@@ -92,7 +102,7 @@ public class CharacterManager {
 			} finally {
 				is.close();
 			}
-			scaledBitmap = bitmap.copy(bitmap.getConfig(), false);
+			setScaleFactor(1.0f);
 
 			sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/logo/02.png";
 			is = context.getResources().getAssets().open(sPath);
@@ -104,8 +114,6 @@ public class CharacterManager {
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
-//		centerX = 100;
-//		centerY = 100;
 	}
 
 	public Bitmap getLogoBitmapForPrinting() {
@@ -130,7 +138,7 @@ public class CharacterManager {
 	public Bitmap getCharacterBitmapForPrinting() {
 		Bitmap characterBitmap = null;
 		if (bitmap != null) {
-			String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha700/" + String.format("%02d.png", characterIndex + 1);
+			String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha700/" + String.format("%02d.png", poseIndex + 1);
 			InputStream is;
 			try {
 				is = context.getResources().getAssets().open(sPath);
@@ -148,7 +156,6 @@ public class CharacterManager {
 	}
 
 	public Bitmap getCharacterScaledBitmap() {
-//		return bitmap;
 		return scaledBitmap;
 	}
 	public int getCharacterCenterX() {
@@ -224,8 +231,35 @@ public class CharacterManager {
 		}
 	}
 
-	public void startMoving(int screenWidth, int screenHeight) {
+	private int targetX;
+	private int targetY;
+	private int movingSpeed;
+
+	public void startMoving(int screenWidth, int screenHeight, int movingSpeed) {
 		targetX = screenWidth >> 1;
 		targetY = screenHeight >> 1;
+		this.movingSpeed = movingSpeed;
+
+		stopMoving();
+		setCharacterMode(MODE_MOVE);
+	}
+
+	public void stopMoving() {
+		setCharacterMode(MODE_FLOAT);
+	}
+
+	public boolean nextMoving() {
+		if (centerX == targetX && centerY == targetY) {
+			return false;
+		}
+		double distance = Math.hypot(targetX - centerX, targetY - centerY);
+		if (distance <= movingSpeed) {
+			centerX = targetX;
+			centerY = targetY;
+		} else {
+			centerX -= (centerX - targetX) * movingSpeed / distance;
+			centerY -= (centerY - targetY) * movingSpeed / distance;
+		}
+		return true;
 	}
 }

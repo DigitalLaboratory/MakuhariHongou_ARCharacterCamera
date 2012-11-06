@@ -27,7 +27,6 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -175,10 +174,14 @@ public class CameraActivity extends Activity {
 	public void onStart() {
 		super.onStart();
 		Log.d(TAG, "onStart()");
+
+		MyApplication.sensors.start();
 	}
 
 	@Override
 	public void onStop() {
+		MyApplication.sensors.stop();
+
 		Log.d(TAG, "onStop()");
 		super.onStop();
 	}

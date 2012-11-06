@@ -1,11 +1,15 @@
 package com.example.androidtestcamera4;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -21,6 +25,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 	private final static String TAG = MySurfaceView.class.getSimpleName();
 
 	private Context context;
+	private Handler handler = new Handler();
 	private SurfaceHolder surfaceHolder;
 	private GestureDetector gestureDetector;
 	private ScaleGestureDetector scaleGestureDetector;
@@ -37,6 +42,12 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
 		gestureDetector = new GestureDetector(context, this);
 		scaleGestureDetector = new ScaleGestureDetector(context, this);
+
+		MyApplication.sensors.addOrientationListener(orientationListener);
+		MyApplication.sensors.addGyroscopeListener(gyroscopeListener);
+
+		movingTimer = new Timer(true);
+		movingTimer.scheduleAtFixedRate(movingTimerTask, 100, 100);
 	}
 
 	private int screenWidth;
@@ -49,6 +60,9 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 		screenHeight = height;
 
 		MyApplication.characterManager.setCurrentCharacter();
+
+MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 8));
+
 	}
 
 	@Override
@@ -212,4 +226,64 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 	public void onScaleEnd(ScaleGestureDetector detector) {
 		Log.d(TAG, "onScaleEnd()");
 	}
+
+	private Timer movingTimer = null;
+
+	private TimerTask movingTimerTask = new TimerTask() {
+		@Override
+		public void run() {
+			if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_MOVE) {
+				if (!MyApplication.characterManager.nextMoving()) {
+					// complete
+					Log.d(TAG, "moving complete");
+					MyApplication.characterManager.stopMoving();
+				}
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						MySurfaceView.this.invalidate();
+					}
+				});
+			}
+		}
+	};
+
+	private Sensors.OrientationListener orientationListener = new Sensors.OrientationListener() {
+		@Override
+		public void onEvent(float[] orientationValues) {
+//			int[] values = new int[3];
+//			values[0] = (int)Math.toDegrees(orientationValues[0]);
+//			values[1] = (int)Math.toDegrees(orientationValues[1]);
+//			values[2] = (int)Math.toDegrees(orientationValues[2]);
+//			Log.d(TAG, String.format("orientation: %d, %d, %d", values[0], values[1], values[2]));
+		}
+	};
+
+	private Sensors.GyroscopeListener gyroscopeListener = new Sensors.GyroscopeListener() {
+		@Override
+		public void onEvent(float[] gyroscopeValues) {
+			if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_FLOAT) {
+				int[] values = new int[3];
+				values[0] = (int)Math.toDegrees(gyroscopeValues[0]) / 2 * 2;
+				values[1] = (int)Math.toDegrees(gyroscopeValues[1]) / 2 * 2;
+				values[2] = (int)Math.toDegrees(gyroscopeValues[2]) / 2 * 2;
+				// 上述 / 2 * 2 は Nexus S 対策。 如何にしても ゴミ 入りぬ。
+//				Log.d(TAG, String.format("gyro: %d, %d, %d", values[0], values[1], values[2]));
+
+				// 960px ほどにて * 1.0 の
+				double factor = screenWidth / 960.0;
+//				factor = screenHeight / 720.0;
+				factor *= factor;
+				int x = MyApplication.characterManager.getCharacterCenterX() + (int)(values[0] * factor);
+				int y = MyApplication.characterManager.getCharacterCenterY() - (int)(values[1] * factor);
+				MyApplication.characterManager.setCharacterCenter(screenWidth, screenHeight, x, y);
+				MySurfaceView.this.invalidate();
+				if (!MyApplication.characterManager.isOnScreen(screenWidth,  screenHeight, x, y)) {
+					MyApplication.characterManager.setCurrentCharacter();
+					MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_MOVE);
+					MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 8));
+				}
+			}
+		}
+	};
 }
