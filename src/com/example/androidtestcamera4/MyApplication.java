@@ -18,6 +18,7 @@ public class MyApplication extends Application {
 		super.onCreate();
 		Log.d(TAG, "onCreate()");
 		instance = this;
+		sensors = new Sensors(this);
 	}
 
 	@Override
@@ -36,4 +37,6 @@ public class MyApplication extends Application {
 	public static Sensors sensors = null;
 	public static Vibrator vibrator = null;
 	public static CharacterManager characterManager = null;
+
+	public static int undergroundCharacterIndex = 0;
 }

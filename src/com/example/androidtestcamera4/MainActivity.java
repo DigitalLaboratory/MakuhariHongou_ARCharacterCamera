@@ -1,12 +1,18 @@
 package com.example.androidtestcamera4;
 
+import java.util.List;
+import java.util.Map;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,10 +33,9 @@ public class MainActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
+		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		this.setContentView(R.layout.activity_main);
 
-		// generate Sensors object
-		MyApplication.sensors = new Sensors(this);
 		// generate vibrator
 		MyApplication.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
 		// generate character manager
@@ -44,6 +49,7 @@ public class MainActivity extends Activity {
 		buttonTake.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				MainActivity.this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 				Intent intent = new Intent(MainActivity.this, CameraActivity.class);
 				MainActivity.this.startActivity(intent);
 			}
@@ -71,18 +77,24 @@ public class MainActivity extends Activity {
 		buttonOptions.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				List<Map<String, Object>> characterInfoMapList = MyApplication.characterManager.getCharacterInfoMapList();
+				String[] sCharacterNames = new String[characterInfoMapList.size()];
+				for (int i = 0;  i < sCharacterNames.length;  ++i) {
+					Map<String, Object> characterInfoMap = characterInfoMapList.get(i);
+					sCharacterNames[i] = (String)characterInfoMap.get("name");
+				}
 				new AlertDialog.Builder(MainActivity.this)
-				.setTitle("AR Character Camera")
-				.setMessage("under construction")
-				.setPositiveButton("OK", null)
+				.setTitle("underground menu")
+				.setSingleChoiceItems(sCharacterNames, -1, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						MyApplication.undergroundCharacterIndex = which;
+					}
+				})
+				.setCancelable(true)
 				.show();
 			}
 		});
-	}
-	@Override
-	public void onResume() {
-		super.onResume();
-		Log.d(TAG, "onResume()");
 	}
 	@Override
 	public void onStart() {
@@ -90,14 +102,19 @@ public class MainActivity extends Activity {
 		Log.d(TAG, "onStart()");
 	}
 	@Override
-	public void onStop() {
-		Log.d(TAG, "onStop()");
-		super.onStop();
+	public void onResume() {
+		super.onResume();
+		Log.d(TAG, "onResume()");
 	}
 	@Override
 	public void onPause() {
 		Log.d(TAG, "onPause()");
 		super.onPause();
+	}
+	@Override
+	public void onStop() {
+		Log.d(TAG, "onStop()");
+		super.onStop();
 	}
 	@Override
 	public void onDestroy() {

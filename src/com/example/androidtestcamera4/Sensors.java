@@ -45,14 +45,15 @@ public class Sensors {
 		Log.d(TAG, "accelerometer: " + accelerometer.getName());
 		Log.d(TAG, "magneticFieldSensor: " + magneticFieldSensor.getName());
 		Log.d(TAG, "gyroscope: " + gyroscope.getName());
-//		Log.d(TAG, "gyroscope min:" + gyroscope.getMinDelay());
 		geocoder = new Geocoder(context, Locale.getDefault());
 	}
 
 	public void start() {
 		Log.d(TAG, "start()");
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0.0f, locationListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0.0f, locationListener);
+		// minTime: minimum time interval between location updates, in milliseconds
+		// minDistance: minimum distance between location updates, in meters
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 1.0f, locationListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1.0f, locationListener2);
 		sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 		sensorManager.registerListener(sensorEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
 		sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
@@ -60,14 +61,36 @@ public class Sensors {
 
 	public void stop() {
 		Log.d(TAG, "stop()");
+		locationManager.removeUpdates(locationListener2);
 		locationManager.removeUpdates(locationListener);
-		sensorManager.unregisterListener(sensorEventListener, accelerometer);
-		sensorManager.unregisterListener(sensorEventListener, magneticFieldSensor);
-		sensorManager.unregisterListener(sensorEventListener, gyroscope);
+		orientationListenerList.clear();
+		gyroscopeListenerList.clear();
+//		sensorManager.unregisterListener(sensorEventListener, accelerometer);
+//		sensorManager.unregisterListener(sensorEventListener, magneticFieldSensor);
+//		sensorManager.unregisterListener(sensorEventListener, gyroscope);
+		sensorManager.unregisterListener(sensorEventListener);
 	}
 
 	private Location location = null;
 
+	private LocationListener locationListener2 = new LocationListener() {
+		@Override
+		public void onLocationChanged(Location location) {
+			locationListener.onLocationChanged(location);
+		}
+		@Override
+		public void onProviderDisabled(String provider) {
+			locationListener.onProviderDisabled(provider);
+		}
+		@Override
+		public void onProviderEnabled(String provider) {
+			locationListener.onProviderEnabled(provider);
+		}
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			locationListener.onStatusChanged(provider, status, extras);
+		}
+	};
 	private LocationListener locationListener = new LocationListener() {
 		@Override
 		public void onLocationChanged(Location location) {
@@ -122,6 +145,9 @@ public class Sensors {
 			switch (event.sensor.getType()) {
 			case Sensor.TYPE_ACCELEROMETER:
 				accelerometerValues = event.values.clone();
+				for (AccelerometerListener accelerometerListener: accelerometerListenerList) {
+					accelerometerListener.onEvent(accelerometerValues);
+				}
 				break;
 			case Sensor.TYPE_MAGNETIC_FIELD:
 				magneticFieldValues = event.values.clone();
@@ -165,12 +191,24 @@ public class Sensors {
 		orientationListenerList.remove(orientationListener);
 	}
 
+	public interface AccelerometerListener {
+		public void onEvent(float[] accelerometerValues);
+	}
+	private List<AccelerometerListener> accelerometerListenerList = new ArrayList<AccelerometerListener>();
+	public void addAccelerometerListener(AccelerometerListener accelerometerListener) {
+		accelerometerListenerList.add(accelerometerListener);
+	}
+	public void removeAccelerometerListener(AccelerometerListener accelerometerListener) {
+		accelerometerListenerList.remove(accelerometerListener);
+	}
+
 	public interface GyroscopeListener {
 		public void onEvent(float[] gyroscopeValues);
 	}
 	private List<GyroscopeListener> gyroscopeListenerList = new ArrayList<GyroscopeListener>();
 	public void addGyroscopeListener(GyroscopeListener gyroscopeListener) {
 		gyroscopeListenerList.add(gyroscopeListener);
+		Log.d(TAG, "gyroscopeListenerList: " + gyroscopeListenerList.size());
 	}
 	public void removeGyroscopeListener(GyroscopeListener gyroscopeListener) {
 		gyroscopeListenerList.remove(gyroscopeListener);

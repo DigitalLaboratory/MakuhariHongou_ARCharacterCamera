@@ -55,6 +55,10 @@ public class CharacterManager {
 		}
 	}
 
+	public List<Map<String, Object>> getCharacterInfoMapList() {
+		return characterInfoMapList;
+	}
+
 	public Map<String, Object> getCharacterInfo() {
 		if (characterInfoMapList != null) {
 			if (characterIndex >= 0) {
@@ -78,10 +82,10 @@ public class CharacterManager {
 	private Bitmap logoBitmap = null;
 	private int centerX;
 	private int centerY;
-	private float scaleFactor = 1.0f;
+	private float scaleFactor = 0.9f;
 
 	public void setCurrentCharacter() {
-		characterIndex = 0;
+		characterIndex = MyApplication.undergroundCharacterIndex;
 		String sPath;
 		for (;  ;  ) {
 			poseIndex = (int)Math.floor(Math.random() * 12);
@@ -218,6 +222,7 @@ public class CharacterManager {
 	public final static int MODE_MOVE = 2; // 画面にて 移れり
 	private int characterMode = MODE_STOP;
 	public void setCharacterMode(int characterMode) {
+		Log.d(TAG, "setCharacterMode:" + characterMode);
 		this.characterMode = characterMode;
 	}
 	public int getCharacterMode() {

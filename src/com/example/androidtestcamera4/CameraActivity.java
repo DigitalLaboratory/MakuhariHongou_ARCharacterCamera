@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -27,6 +28,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -162,34 +164,31 @@ public class CameraActivity extends Activity {
 	}
 
 	@Override
-	public void onResume() {
-		super.onResume();
-		Log.d(TAG, "onResume()");
-		mySurfaceView.bringToFront();
-		surfaceViewPreview.bringToFront();
-		linearLayoutButtons.bringToFront();
-	}
-
-	@Override
 	public void onStart() {
 		super.onStart();
 		Log.d(TAG, "onStart()");
-
-		MyApplication.sensors.start();
 	}
 
 	@Override
-	public void onStop() {
-		MyApplication.sensors.stop();
+	public void onResume() {
+		super.onResume();
+		Log.d(TAG, "onResume()");
 
-		Log.d(TAG, "onStop()");
-		super.onStop();
+//		MyApplication.sensors.start();
 	}
 
 	@Override
 	public void onPause() {
+//		MyApplication.sensors.stop();
+
 		Log.d(TAG, "onPause()");
 		super.onPause();
+	}
+
+	@Override
+	public void onStop() {
+		Log.d(TAG, "onStop()");
+		super.onStop();
 	}
 
 	@Override
@@ -587,5 +586,15 @@ public class CameraActivity extends Activity {
 		default:
 			return super.onContextItemSelected(item);
 		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent keyEvent) {
+		if (keyCode != KeyEvent.KEYCODE_BACK) {
+			return super.onKeyDown(keyCode, keyEvent);
+		}
+		Log.d(TAG, "onKeyDown()");
+		CameraActivity.this.finish();
+		return true;
 	}
 }

@@ -43,11 +43,20 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 		gestureDetector = new GestureDetector(context, this);
 		scaleGestureDetector = new ScaleGestureDetector(context, this);
 
-		MyApplication.sensors.addOrientationListener(orientationListener);
-		MyApplication.sensors.addGyroscopeListener(gyroscopeListener);
-
+		if (movingTimer != null) {
+			movingTimer.cancel();
+			movingTimer.purge();
+		}
 		movingTimer = new Timer(true);
 		movingTimer.scheduleAtFixedRate(movingTimerTask, 100, 100);
+	}
+
+	@Override
+	public void finalize() throws Throwable {
+		movingTimer.cancel();
+		movingTimer.purge();
+		movingTimer = null;
+		super.finalize();
 	}
 
 	private int screenWidth;
@@ -69,11 +78,19 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 	public void surfaceCreated(SurfaceHolder holder) {
 		Log.d(TAG, "surfaceCreated()!");
 		surfaceHolder = holder;
+		MyApplication.sensors.start();
+		MyApplication.sensors.addOrientationListener(orientationListener);
+		MyApplication.sensors.addAccelerometerListener(accelerometerListener);
+		MyApplication.sensors.addGyroscopeListener(gyroscopeListener);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		Log.d(TAG, "surfaceDestroyed()!");
+		MyApplication.sensors.removeGyroscopeListener(gyroscopeListener);
+		MyApplication.sensors.removeAccelerometerListener(accelerometerListener);
+		MyApplication.sensors.removeOrientationListener(orientationListener);
+		MyApplication.sensors.stop();
 	}
 
 	@Override
@@ -161,15 +178,8 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 	}
 
 	@Override
-	public boolean onSingleTapUp(MotionEvent e) {
+	public boolean onSingleTapUp(MotionEvent event) {
 		Log.d(TAG, "onSingleTapUp()");
-		return true;
-	}
-
-	// GestureDetector.OnDoubleTapListener
-
-	@Override
-	public boolean onDoubleTap(MotionEvent event) {
 		int x = (int)event.getX();
 		int y = (int)event.getY();
 		if (MyApplication.characterManager.hits(x, y)) {
@@ -188,6 +198,31 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 			}
 		}
 		return true;
+	}
+
+	// GestureDetector.OnDoubleTapListener
+
+	@Override
+	public boolean onDoubleTap(MotionEvent event) {
+//		int x = (int)event.getX();
+//		int y = (int)event.getY();
+//		if (MyApplication.characterManager.hits(x, y)) {
+//			switch (MyApplication.characterManager.getCharacterMode()) {
+//			case CharacterManager.MODE_STOP:
+//				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_FLOAT);
+//				Toast.makeText(context, "STOP -> FLOAT", Toast.LENGTH_SHORT).show();
+//				break;
+//			case CharacterManager.MODE_FLOAT:
+//				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_STOP);
+//				Toast.makeText(context, "FLOAT -> STOP", Toast.LENGTH_SHORT).show();
+//				break;
+//			case CharacterManager.MODE_MOVE:
+//				// ignore
+//				break;
+//			}
+//		}
+//		return true;
+		return false;
 	}
 	@Override
 	public boolean onDoubleTapEvent(MotionEvent e) {
@@ -227,7 +262,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		Log.d(TAG, "onScaleEnd()");
 	}
 
-	private Timer movingTimer = null;
+	private static Timer movingTimer = null;
 
 	private TimerTask movingTimerTask = new TimerTask() {
 		@Override
@@ -259,6 +294,15 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		}
 	};
 
+	private Sensors.AccelerometerListener accelerometerListener = new Sensors.AccelerometerListener() {
+		@Override
+		public void onEvent(float[] accelerometerValues) {
+			if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_FLOAT) {
+				
+			}
+		}
+	};
+
 	private Sensors.GyroscopeListener gyroscopeListener = new Sensors.GyroscopeListener() {
 		@Override
 		public void onEvent(float[] gyroscopeValues) {
@@ -268,12 +312,28 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 				values[1] = (int)Math.toDegrees(gyroscopeValues[1]) / 2 * 2;
 				values[2] = (int)Math.toDegrees(gyroscopeValues[2]) / 2 * 2;
 				// 上述 / 2 * 2 は Nexus S 対策。 如何にしても ゴミ 入りぬ。
+				// 上限・下限を設く
+				if (values[0] < -60) {
+					values[0] = -60;
+				} else if (values[0] > 60) {
+					values[0] = 60;
+				}
+				if (values[1] < -60) {
+					values[1] = -60;
+				} else if (values[1] > 60) {
+					values[1] = 60;
+				}
+				if (values[2] < -60) {
+					values[2] = -60;
+				} else if (values[2] > 60) {
+					values[2] = 60;
+				}
 //				Log.d(TAG, String.format("gyro: %d, %d, %d", values[0], values[1], values[2]));
 
 				// 960px ほどにて * 1.0 の
 				double factor = screenWidth / 960.0;
 //				factor = screenHeight / 720.0;
-				factor *= factor;
+				factor = factor * factor * factor * factor;
 				int x = MyApplication.characterManager.getCharacterCenterX() + (int)(values[0] * factor);
 				int y = MyApplication.characterManager.getCharacterCenterY() - (int)(values[1] * factor);
 				MyApplication.characterManager.setCharacterCenter(screenWidth, screenHeight, x, y);
