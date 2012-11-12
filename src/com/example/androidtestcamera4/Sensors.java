@@ -95,7 +95,7 @@ public class Sensors {
 		@Override
 		public void onLocationChanged(Location location) {
 			String sProvider = location.getProvider();
-			Log.d(TAG, String.format("location provider %s changed the location.", sProvider));
+//			Log.d(TAG, String.format("location provider %s changed the location.", sProvider));
 			synchronized (locationListener) {
 				Sensors.this.location = location;
 			}

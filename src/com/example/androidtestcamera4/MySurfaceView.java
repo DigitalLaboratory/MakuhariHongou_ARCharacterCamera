@@ -1,11 +1,15 @@
 package com.example.androidtestcamera4;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.FontMetrics;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
@@ -34,6 +38,8 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 		super(context, attrs);
 		this.context = context;
 
+		Log.d(TAG, "MySurfaceView: " + this);
+
 		surfaceHolder = this.getHolder();
 		surfaceHolder.setFormat(PixelFormat.TRANSPARENT);
 		surfaceHolder.addCallback(this);
@@ -43,20 +49,6 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 		gestureDetector = new GestureDetector(context, this);
 		scaleGestureDetector = new ScaleGestureDetector(context, this);
 
-		if (movingTimer != null) {
-			movingTimer.cancel();
-			movingTimer.purge();
-		}
-		movingTimer = new Timer(true);
-		movingTimer.scheduleAtFixedRate(movingTimerTask, 100, 100);
-	}
-
-	@Override
-	public void finalize() throws Throwable {
-		movingTimer.cancel();
-		movingTimer.purge();
-		movingTimer = null;
-		super.finalize();
 	}
 
 	private int screenWidth;
@@ -70,7 +62,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
 		MyApplication.characterManager.setCurrentCharacter();
 
-MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 8));
+MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 12));
 
 	}
 
@@ -82,11 +74,40 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		MyApplication.sensors.addOrientationListener(orientationListener);
 		MyApplication.sensors.addAccelerometerListener(accelerometerListener);
 		MyApplication.sensors.addGyroscopeListener(gyroscopeListener);
+
+		if (movingTimer != null) {
+			movingTimer.cancel();
+			movingTimer.purge();
+			movingTimer = null;
+		}
+		movingTimer = new Timer(true);
+		movingTimer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_MOVE) {
+					if (!MyApplication.characterManager.nextMoving()) {
+						// complete
+						Log.d(TAG, "moving complete");
+						MyApplication.characterManager.stopMoving();
+					}
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							MySurfaceView.this.invalidate();
+						}
+					});
+				}
+			}
+		}, 100, 100);
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		Log.d(TAG, "surfaceDestroyed()!");
+		movingTimer.cancel();
+		movingTimer.purge();
+		movingTimer = null;
+
 		MyApplication.sensors.removeGyroscopeListener(gyroscopeListener);
 		MyApplication.sensors.removeAccelerometerListener(accelerometerListener);
 		MyApplication.sensors.removeOrientationListener(orientationListener);
@@ -110,10 +131,50 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 				paint.setARGB(0, 0, 0, 0);
 				canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
 				MyApplication.characterManager.draw(canvas);
+				if (drawLocation) {
+					String[] sAddressLines = MyApplication.sensors.getAddressLines();
+					if (sAddressLines != null && sAddressLines.length > 0) {
+						String sAddress = "";
+						for (String sAddressLine: sAddressLines) {
+							sAddress += sAddressLine + " ";
+						}
+						Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+						textPaint.setColor(Color.WHITE);
+						textPaint.setTextSize(24.0f);
+						textPaint.setShadowLayer(4,  2,  2,  Color.BLACK);
+						FontMetrics fontMetrics = textPaint.getFontMetrics();
+						int height = (int)(fontMetrics.bottom - fontMetrics.top);
+						int width = (int)textPaint.measureText(sAddress);
+						canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
+						// 重過ぎ
+					}
+				}
+				if (drawDate) {
+					String sDate = new SimpleDateFormat(context.getResources().getString(R.string.DATE_FORMAT)).format(new Date());
+					Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+					textPaint.setColor(Color.WHITE);
+					textPaint.setTextSize(24.0f);
+					textPaint.setShadowLayer(4, 2, 2, Color.BLACK);
+					FontMetrics fontMetrics = textPaint.getFontMetrics();
+					int height = (int)(fontMetrics.bottom - fontMetrics.top);
+					int width = (int)textPaint.measureText(sDate);
+					canvas.drawText(sDate, canvas.getWidth() - width - height, canvas.getHeight() - 12 - 12 - 24, textPaint);
+				}
 			} finally {
 				holder.unlockCanvasAndPost(canvas);
 			}
 		}
+	}
+
+	private boolean drawLocation = true;
+	public void setDrawLocation(boolean flag) {
+		drawLocation = flag;
+		MySurfaceView.this.invalidate();
+	}
+	private boolean drawDate = true;
+	public void setDrawDate(boolean flag) {
+		drawDate = flag;
+		MySurfaceView.this.invalidate();
 	}
 
 	/**
@@ -186,11 +247,11 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 			switch (MyApplication.characterManager.getCharacterMode()) {
 			case CharacterManager.MODE_STOP:
 				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_FLOAT);
-				Toast.makeText(context, "STOP -> FLOAT", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "浮遊モード", Toast.LENGTH_SHORT).show();
 				break;
 			case CharacterManager.MODE_FLOAT:
 				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_STOP);
-				Toast.makeText(context, "FLOAT -> STOP", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "停止モード", Toast.LENGTH_SHORT).show();
 				break;
 			case CharacterManager.MODE_MOVE:
 				// ignore
@@ -204,24 +265,6 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
-//		int x = (int)event.getX();
-//		int y = (int)event.getY();
-//		if (MyApplication.characterManager.hits(x, y)) {
-//			switch (MyApplication.characterManager.getCharacterMode()) {
-//			case CharacterManager.MODE_STOP:
-//				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_FLOAT);
-//				Toast.makeText(context, "STOP -> FLOAT", Toast.LENGTH_SHORT).show();
-//				break;
-//			case CharacterManager.MODE_FLOAT:
-//				MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_STOP);
-//				Toast.makeText(context, "FLOAT -> STOP", Toast.LENGTH_SHORT).show();
-//				break;
-//			case CharacterManager.MODE_MOVE:
-//				// ignore
-//				break;
-//			}
-//		}
-//		return true;
 		return false;
 	}
 	@Override
@@ -262,7 +305,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		Log.d(TAG, "onScaleEnd()");
 	}
 
-	private static Timer movingTimer = null;
+	private Timer movingTimer = null;
 
 	private TimerTask movingTimerTask = new TimerTask() {
 		@Override
@@ -294,11 +337,24 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		}
 	};
 
+	private float[] previousAccelerometerValues = null;
+
 	private Sensors.AccelerometerListener accelerometerListener = new Sensors.AccelerometerListener() {
 		@Override
 		public void onEvent(float[] accelerometerValues) {
 			if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_FLOAT) {
-				
+				if (previousAccelerometerValues != null) {
+					float value = accelerometerValues[2] - previousAccelerometerValues[2];
+					value /= 10.0f;
+					if (value > 1.0f) {
+						value = 1.0f; 
+					} else if (value < -1.0f) {
+						value = -1.0f;
+					}
+					value += 1.0f;
+//					MyApplication.characterManager.setScaleFactor(value);
+				}
+				previousAccelerometerValues = accelerometerValues.clone();
 			}
 		}
 	};
@@ -341,7 +397,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 				if (!MyApplication.characterManager.isOnScreen(screenWidth,  screenHeight, x, y)) {
 					MyApplication.characterManager.setCurrentCharacter();
 					MyApplication.characterManager.setCharacterMode(CharacterManager.MODE_MOVE);
-					MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 8));
+					MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidth / (640 / 12));
 				}
 			}
 		}

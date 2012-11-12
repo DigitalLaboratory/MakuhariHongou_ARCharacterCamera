@@ -52,8 +52,9 @@ public class CameraActivity extends Activity {
 
 	private final static String TAG = CameraActivity.class.getSimpleName();
 
-	private FrameLayout layout;
+	private LinearLayout linearLayoutMySurfaceView;
 	private MySurfaceView mySurfaceView;
+	private LinearLayout linearLayoutSurfaceViewPreview;
 	private SurfaceView surfaceViewPreview;
 	private LinearLayout linearLayoutButtons;
 
@@ -75,10 +76,10 @@ public class CameraActivity extends Activity {
 		// remove status-bar
 		this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-		layout = (FrameLayout)this.findViewById(R.id.layout);
-
+		linearLayoutMySurfaceView = (LinearLayout)this.findViewById(R.id.linearLayoutMySurfaceView);
 		mySurfaceView = (MySurfaceView)this.findViewById(R.id.mySurfaceView);
 
+		linearLayoutSurfaceViewPreview = (LinearLayout)this.findViewById(R.id.linearLayoutSurfaceViewPreview);
 		surfaceViewPreview = (SurfaceView)this.findViewById(R.id.surfaceViewPreview);
 		SurfaceHolder surfaceHolder = surfaceViewPreview.getHolder();
 		surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -136,12 +137,14 @@ public class CameraActivity extends Activity {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				MyApplication.vibrator.vibrate(5);
+				mySurfaceView.setDrawLocation(isChecked);
 			}
 		});
 		buttonDay.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				MyApplication.vibrator.vibrate(5);
+				mySurfaceView.setDrawDate(isChecked);
 			}
 		});
 		buttonThumbnail.setOnClickListener(new OnClickListener() {
@@ -173,14 +176,10 @@ public class CameraActivity extends Activity {
 	public void onResume() {
 		super.onResume();
 		Log.d(TAG, "onResume()");
-
-//		MyApplication.sensors.start();
 	}
 
 	@Override
 	public void onPause() {
-//		MyApplication.sensors.stop();
-
 		Log.d(TAG, "onPause()");
 		super.onPause();
 	}
@@ -195,6 +194,7 @@ public class CameraActivity extends Activity {
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy()");
 		super.onDestroy();
+		this.finish();
 	}
 
 	@Override
@@ -259,6 +259,7 @@ public class CameraActivity extends Activity {
 						layoutParams.width = optimalPreviewSize.width;
 						layoutParams.height = optimalPreviewSize.height;
 						surfaceViewPreview.setLayoutParams(layoutParams);
+						linearLayoutSurfaceViewPreview.requestLayout();
 
 						// set layout parameters of the character view
 						{
@@ -267,10 +268,10 @@ public class CameraActivity extends Activity {
 							layoutParams2.height = optimalPreviewSize.height;
 							mySurfaceView.setLayoutParams(layoutParams2);
 							mySurfaceView.invalidate();
+							linearLayoutMySurfaceView.requestLayout();
 						}
 
 						camera.setParameters(parameters);
-						layout.invalidate();
 						Log.d(TAG, String.format("setParameters: %d, %d", optimalPreviewSize.width, optimalPreviewSize.height));
 						Toast.makeText(CameraActivity.this, String.format("%d x %d", optimalPreviewSize.width, optimalPreviewSize.height), Toast.LENGTH_SHORT).show();
 					}
@@ -384,13 +385,15 @@ public class CameraActivity extends Activity {
 			sourceRect = new Rect(0, 0, characterBitmap.getWidth(), characterBitmap.getHeight());
 			canvas.drawBitmap(characterBitmap, sourceRect, destinationRect, null);
 			characterBitmap.recycle();
+		}
 
 			// charater logo -> left top
 			// もと 640x480 中 277x56 を想定
-			
-			Bitmap logoBitmap = MyApplication.characterManager.getLogoBitmapForPrinting();
-			sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
+		Bitmap logoBitmap = MyApplication.characterManager.getLogoBitmapForPrinting();
+		if (logoBitmap != null) {
+			Rect sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
 			int margin = canvas.getWidth() * 10 / 640;
+			Rect destinationRect = new Rect(sourceRect);
 			destinationRect.left = margin + 0;
 			destinationRect.top = margin + 0;
 			destinationRect.right = margin + canvas.getWidth() * 277 / 640;
@@ -414,7 +417,7 @@ public class CameraActivity extends Activity {
 				FontMetrics fontMetrics = textPaint.getFontMetrics();
 				int height = (int)(fontMetrics.bottom - fontMetrics.top);
 				int width = (int)textPaint.measureText(sAddress);
-				canvas.drawText(sAddress, height, canvas.getHeight() - height, textPaint);
+				canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
 			}
 		}
 
@@ -428,7 +431,7 @@ public class CameraActivity extends Activity {
 			FontMetrics fontMetrics = textPaint.getFontMetrics();
 			int height = (int)(fontMetrics.bottom - fontMetrics.top);
 			int width = (int)textPaint.measureText(sDate);
-			canvas.drawText(sDate, canvas.getWidth() - width - height, (int)(canvas.getHeight() - height * 2.5), textPaint);
+			canvas.drawText(sDate, canvas.getWidth() - width - height, (int)(canvas.getHeight() - 12 - 24 - 24), textPaint);
 		}
 		if (characterBitmap != null) {
 			// copyright notice -> right bottom
@@ -436,12 +439,12 @@ public class CameraActivity extends Activity {
 			if (sNotice != null && !sNotice.equals("")) {
 				Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 				textPaint.setColor(Color.WHITE);
-				textPaint.setTextSize(24.0f);
+				textPaint.setTextSize(16.0f);
 				textPaint.setShadowLayer(4, 2, 2, Color.BLACK);
 				FontMetrics fontMetrics = textPaint.getFontMetrics();
 				int height = (int)(fontMetrics.bottom - fontMetrics.top);
 				int width = (int)textPaint.measureText(sNotice);
-				canvas.drawText(sNotice, canvas.getWidth() - width - height, canvas.getHeight() - height, textPaint);
+				canvas.drawText(sNotice, canvas.getWidth() - width - height, canvas.getHeight() - 12, textPaint);
 			}
 		}
 

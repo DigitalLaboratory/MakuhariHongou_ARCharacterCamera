@@ -16,6 +16,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.FontMetrics;
 import android.graphics.Rect;
 import android.util.Log;
 
@@ -86,8 +87,12 @@ public class CharacterManager {
 
 	public void setCurrentCharacter() {
 		characterIndex = MyApplication.undergroundCharacterIndex;
-		String sPath;
+		boolean logoOnly = characterInfoMapList.get(characterIndex).get("logoonly") != null;
+		String sPath = null;
 		for (;  ;  ) {
+			if (logoOnly) {
+				break;
+			}
 			poseIndex = (int)Math.floor(Math.random() * 12);
 			sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/cha300/" + String.format("%02d.png", poseIndex + 1);
 			try {
@@ -100,11 +105,13 @@ public class CharacterManager {
 		}
 		InputStream is;
 		try {
-			is = context.getResources().getAssets().open(sPath);
-			try {
-				bitmap = BitmapFactory.decodeStream(is);
-			} finally {
-				is.close();
+			if (!logoOnly) {
+				is = context.getResources().getAssets().open(sPath);
+				try {
+					bitmap = BitmapFactory.decodeStream(is);
+				} finally {
+					is.close();
+				}
 			}
 			setScaleFactor(1.0f);
 
@@ -121,24 +128,25 @@ public class CharacterManager {
 	}
 
 	public Bitmap getLogoBitmapForPrinting() {
-		Bitmap logoBitmap = null;
-		if (bitmap != null) {
+		Bitmap logoBitmap2 = null;
+		if (logoBitmap != null) {
 			String sPath = "characters/" + characterInfoMapList.get(characterIndex).get("path") + "/logo/01.png";
 			InputStream is;
 			try {
 				is = context.getResources().getAssets().open(sPath);
 				try {
-					logoBitmap = BitmapFactory.decodeStream(is);
+					logoBitmap2 = BitmapFactory.decodeStream(is);
 				} finally {
 					is.close();
 				}
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
-				logoBitmap = null;
+				logoBitmap2 = null;
 			}
 		}
-		return logoBitmap;
+		return logoBitmap2;
 	}
+
 	public Bitmap getCharacterBitmapForPrinting() {
 		Bitmap characterBitmap = null;
 		if (bitmap != null) {
@@ -182,6 +190,7 @@ public class CharacterManager {
 	 */
 	public void draw(Canvas canvas) {
 		if (bitmap != null) {
+			// キャラクターの描画
 			if (centerX + (scaledBitmap.getWidth() >> 1) < 0
 					|| centerX - (scaledBitmap.getWidth() >> 1) > canvas.getWidth()
 					|| centerY + (scaledBitmap.getHeight() >> 1) < 0
@@ -192,7 +201,9 @@ public class CharacterManager {
 			Paint paint = new Paint();
 			paint.setColor(Color.WHITE); // why white?
 			canvas.drawBitmap(scaledBitmap, centerX - (scaledBitmap.getWidth() >> 1), centerY - (scaledBitmap.getHeight() >> 1), paint);
-
+		}
+		if (logoBitmap != null) {
+			// ロゴの描画
 			Rect sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
 			Rect destinationRect = new Rect();
 			destinationRect.left = 10 + 0;
@@ -200,6 +211,19 @@ public class CharacterManager {
 			destinationRect.right = 10 + canvas.getWidth() * 277 / 640;
 			destinationRect.bottom = 10 + destinationRect.right * 56 / 227;
 			canvas.drawBitmap(logoBitmap, sourceRect, destinationRect, null);
+		}
+		if (bitmap != null || logoBitmap != null) {
+			String sNotice = (String)characterInfoMapList.get(characterIndex).get("copyright");
+			if (sNotice != null && !sNotice.equals("")) {
+				Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+				textPaint.setColor(Color.WHITE);
+				textPaint.setTextSize(16.0f);
+				textPaint.setShadowLayer(4, 2, 2, Color.BLACK);
+				FontMetrics fontMetrics = textPaint.getFontMetrics();
+				int height = (int)(fontMetrics.bottom - fontMetrics.top);
+				int width = (int)textPaint.measureText(sNotice);
+				canvas.drawText(sNotice, canvas.getWidth() - width - height, canvas.getHeight() - 12, textPaint);
+			}
 		}
 	}
 
@@ -241,6 +265,7 @@ public class CharacterManager {
 	private int movingSpeed;
 
 	public void startMoving(int screenWidth, int screenHeight, int movingSpeed) {
+		Log.d(TAG, "startMoving!");
 		targetX = screenWidth >> 1;
 		targetY = screenHeight >> 1;
 		this.movingSpeed = movingSpeed;
