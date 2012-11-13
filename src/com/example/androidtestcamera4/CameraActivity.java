@@ -44,6 +44,7 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -259,16 +260,18 @@ public class CameraActivity extends Activity {
 						layoutParams.width = optimalPreviewSize.width;
 						layoutParams.height = optimalPreviewSize.height;
 						surfaceViewPreview.setLayoutParams(layoutParams);
-						linearLayoutSurfaceViewPreview.requestLayout();
-
+						int marginLR = (width - optimalPreviewSize.width) / 2;
+						int marginTB = (height - optimalPreviewSize.height) / 2;
+						((LinearLayout.LayoutParams)surfaceViewPreview.getLayoutParams()).setMargins(marginLR, marginTB, marginLR, marginTB);
+						linearLayoutSurfaceViewPreview.invalidate();
 						// set layout parameters of the character view
 						{
 							ViewGroup.LayoutParams layoutParams2 = mySurfaceView.getLayoutParams();
 							layoutParams2.width = optimalPreviewSize.width;
 							layoutParams2.height = optimalPreviewSize.height;
 							mySurfaceView.setLayoutParams(layoutParams2);
-							mySurfaceView.invalidate();
-							linearLayoutMySurfaceView.requestLayout();
+							((LinearLayout.LayoutParams)mySurfaceView.getLayoutParams()).setMargins(marginLR, marginTB, marginLR, marginTB);
+							linearLayoutMySurfaceView.invalidate();
 						}
 
 						camera.setParameters(parameters);

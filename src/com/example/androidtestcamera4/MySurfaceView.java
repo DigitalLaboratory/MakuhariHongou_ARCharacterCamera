@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -122,6 +123,11 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 
 	private static PorterDuffXfermode porterDuffXfermodeSrc = new PorterDuffXfermode(PorterDuff.Mode.SRC);
 
+	private Bitmap locationBitmap = null;
+	private Paint locationPaint = null;
+	private Bitmap dateBitmap = null;
+	private Paint datePaint = null;
+
 	private void onDraw(SurfaceHolder holder) {
 		Canvas canvas = holder.lockCanvas(null);
 		if (canvas != null) {
@@ -132,33 +138,50 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 				canvas.drawRect(0, 0, screenWidth, screenHeight, paint);
 				MyApplication.characterManager.draw(canvas);
 				if (drawLocation) {
-					String[] sAddressLines = MyApplication.sensors.getAddressLines();
-					if (sAddressLines != null && sAddressLines.length > 0) {
-						String sAddress = "";
-						for (String sAddressLine: sAddressLines) {
-							sAddress += sAddressLine + " ";
+					if (locationBitmap == null) {
+						String[] sAddressLines = MyApplication.sensors.getAddressLines();
+						if (sAddressLines != null && sAddressLines.length > 0) {
+							String sLocation = "";
+							for (String sAddressLine: sAddressLines) {
+								sLocation += sAddressLine + " ";
+							}
+							locationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+							locationPaint.setColor(Color.WHITE);
+							locationPaint.setTextSize(24.0f);
+							locationPaint.setShadowLayer(4,  2,  2,  Color.BLACK);
+							FontMetrics fontMetrics = locationPaint.getFontMetrics();
+							int height = (int)(fontMetrics.bottom - fontMetrics.top);
+							int width = (int)locationPaint.measureText(sLocation);
+							locationBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+							Canvas canvas2 = new Canvas(locationBitmap);
+							canvas2.drawText(sLocation, 0, -fontMetrics.top, locationPaint);
 						}
-						Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-						textPaint.setColor(Color.WHITE);
-						textPaint.setTextSize(24.0f);
-						textPaint.setShadowLayer(4,  2,  2,  Color.BLACK);
-						FontMetrics fontMetrics = textPaint.getFontMetrics();
-						int height = (int)(fontMetrics.bottom - fontMetrics.top);
-						int width = (int)textPaint.measureText(sAddress);
-						canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
-						// 重過ぎ
+					}
+//					canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
+					if (locationBitmap != null) {
+						canvas.drawBitmap(locationBitmap, (int)(locationPaint.getFontMetricsInt().bottom - locationPaint.getFontMetrics().top), canvas.getHeight() - 12 - 24 + locationPaint.getFontMetrics().top, null);
 					}
 				}
 				if (drawDate) {
-					String sDate = new SimpleDateFormat(context.getResources().getString(R.string.DATE_FORMAT)).format(new Date());
-					Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-					textPaint.setColor(Color.WHITE);
-					textPaint.setTextSize(24.0f);
-					textPaint.setShadowLayer(4, 2, 2, Color.BLACK);
-					FontMetrics fontMetrics = textPaint.getFontMetrics();
-					int height = (int)(fontMetrics.bottom - fontMetrics.top);
-					int width = (int)textPaint.measureText(sDate);
-					canvas.drawText(sDate, canvas.getWidth() - width - height, canvas.getHeight() - 12 - 12 - 24, textPaint);
+					if (dateBitmap == null) {
+						String sDate = new SimpleDateFormat(context.getResources().getString(R.string.DATE_FORMAT)).format(new Date());
+						datePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+						datePaint.setColor(Color.WHITE);
+						datePaint.setTextSize(24.0f);
+						datePaint.setShadowLayer(4, 2, 2, Color.BLACK);
+						FontMetrics fontMetrics = datePaint.getFontMetrics();
+						int height = (int)(fontMetrics.bottom - fontMetrics.top);
+						int width = (int)datePaint.measureText(sDate);
+						if (dateBitmap == null) {
+							dateBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+							Canvas canvas2 = new Canvas(dateBitmap);
+							canvas2.drawText(sDate, 0, -fontMetrics.top, datePaint);
+						}
+					}
+//					canvas.drawText(sDate, canvas.getWidth() - width - height, canvas.getHeight() - 12 - 12 - 24, textPaint);
+					if (dateBitmap != null) {
+						canvas.drawBitmap(dateBitmap, canvas.getWidth() - dateBitmap.getWidth() - (int)(datePaint.getFontMetrics().bottom - datePaint.getFontMetrics().top), canvas.getHeight() - 12 - 12 - 24 + datePaint.getFontMetrics().top, datePaint);
+					}
 				}
 			} finally {
 				holder.unlockCanvasAndPost(canvas);
