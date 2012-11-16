@@ -69,6 +69,18 @@ public class CharacterManager {
 		return null;
 	}
 
+	public String getPlace() {
+		if (characterInfoMapList != null) {
+			if (characterIndex >= 0) {
+				Map<String, Object> characterInfoMap = characterInfoMapList.get(characterIndex);
+				if (characterInfoMap.get("place") != null) {
+					return (String)characterInfoMap.get("place");
+				}
+			}
+		}
+		return null;
+	}
+
 	// current character (specific pose)
 
 	// assets/characters/NAME/char123/NN.png ... for thumbnails
@@ -206,10 +218,10 @@ public class CharacterManager {
 			// ロゴの描画
 			Rect sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
 			Rect destinationRect = new Rect();
-			destinationRect.left = 10 + 0;
+			destinationRect.left = 10 + 0 + 80;
 			destinationRect.top = 10 + 0;
-			destinationRect.right = 10 + canvas.getWidth() * 277 / 640;
-			destinationRect.bottom = 10 + destinationRect.right * 56 / 227;
+			destinationRect.right = 10 + canvas.getWidth() * 277 / 640 + 80;
+			destinationRect.bottom = 10 + (destinationRect.right - 90)* 56 / 227;
 			canvas.drawBitmap(logoBitmap, sourceRect, destinationRect, null);
 		}
 		if (bitmap != null || logoBitmap != null) {
@@ -222,7 +234,7 @@ public class CharacterManager {
 				FontMetrics fontMetrics = textPaint.getFontMetrics();
 				int height = (int)(fontMetrics.bottom - fontMetrics.top);
 				int width = (int)textPaint.measureText(sNotice);
-				canvas.drawText(sNotice, canvas.getWidth() - width - height, canvas.getHeight() - 12, textPaint);
+				canvas.drawText(sNotice, canvas.getWidth() - width - height - 80, canvas.getHeight() - 12, textPaint);
 			}
 		}
 	}

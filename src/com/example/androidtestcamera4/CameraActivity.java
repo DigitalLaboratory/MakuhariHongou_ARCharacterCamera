@@ -397,30 +397,35 @@ public class CameraActivity extends Activity {
 			Rect sourceRect = new Rect(0, 0, logoBitmap.getWidth(), logoBitmap.getHeight());
 			int margin = canvas.getWidth() * 10 / 640;
 			Rect destinationRect = new Rect(sourceRect);
-			destinationRect.left = margin + 0;
+			destinationRect.left = margin + 0 + 80;
 			destinationRect.top = margin + 0;
-			destinationRect.right = margin + canvas.getWidth() * 277 / 640;
-			destinationRect.bottom = margin + destinationRect.right * 56 / 277;
+			destinationRect.right = margin + canvas.getWidth() * 277 / 640 + 80;
+			destinationRect.bottom = margin + (destinationRect.right - margin - 80) * 56 / 277;
 			canvas.drawBitmap(logoBitmap, sourceRect, destinationRect, null);
 		}
 
 		if (buttonLocation.isChecked()) {
-			// place -> left bottom
-			String[] sAddressLines = MyApplication.sensors.getAddressLines();
-			if (sAddressLines != null && sAddressLines.length > 0) {
-				// one line?
-				String sAddress = "";
-				for (String sAddressLine: sAddressLines) {
-					sAddress += sAddressLine + " ";
+			String sLocation = MyApplication.characterManager.getPlace();
+			if (sLocation == null) {
+				// place -> left bottom
+				String[] sAddressLines = MyApplication.sensors.getAddressLines();
+				if (sAddressLines != null && sAddressLines.length > 0) {
+					// one line?
+					sLocation = "";
+					for (String sAddressLine: sAddressLines) {
+						sLocation += sAddressLine + " ";
+					}
 				}
+			}
+			if (sLocation != null) {
 				Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 				textPaint.setColor(Color.WHITE);
 				textPaint.setTextSize(24.0f);
 				textPaint.setShadowLayer(4, 2, 2, Color.BLACK);
 				FontMetrics fontMetrics = textPaint.getFontMetrics();
 				int height = (int)(fontMetrics.bottom - fontMetrics.top);
-				int width = (int)textPaint.measureText(sAddress);
-				canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
+				int width = (int)textPaint.measureText(sLocation);
+				canvas.drawText(sLocation, height + 80, canvas.getHeight() - 12 - 24, textPaint);
 			}
 		}
 
@@ -434,7 +439,7 @@ public class CameraActivity extends Activity {
 			FontMetrics fontMetrics = textPaint.getFontMetrics();
 			int height = (int)(fontMetrics.bottom - fontMetrics.top);
 			int width = (int)textPaint.measureText(sDate);
-			canvas.drawText(sDate, canvas.getWidth() - width - height, (int)(canvas.getHeight() - 12 - 24 - 24), textPaint);
+			canvas.drawText(sDate, canvas.getWidth() - width - height - 80, (int)(canvas.getHeight() - 12 - 24 - 24), textPaint);
 		}
 		if (characterBitmap != null) {
 			// copyright notice -> right bottom
@@ -447,7 +452,7 @@ public class CameraActivity extends Activity {
 				FontMetrics fontMetrics = textPaint.getFontMetrics();
 				int height = (int)(fontMetrics.bottom - fontMetrics.top);
 				int width = (int)textPaint.measureText(sNotice);
-				canvas.drawText(sNotice, canvas.getWidth() - width - height, canvas.getHeight() - 12, textPaint);
+				canvas.drawText(sNotice, canvas.getWidth() - width - height - 80, canvas.getHeight() - 12, textPaint);
 			}
 		}
 

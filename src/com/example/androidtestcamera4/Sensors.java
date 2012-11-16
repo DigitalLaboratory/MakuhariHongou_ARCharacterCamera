@@ -52,11 +52,11 @@ public class Sensors {
 		Log.d(TAG, "start()");
 		// minTime: minimum time interval between location updates, in milliseconds
 		// minDistance: minimum distance between location updates, in meters
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 1.0f, locationListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1.0f, locationListener2);
-		sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		sensorManager.registerListener(sensorEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
-		sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1.0f, locationListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1.0f, locationListener2);
+//		sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+//		sensorManager.registerListener(sensorEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
+		sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_UI);
 	}
 
 	public void stop() {
@@ -144,12 +144,14 @@ public class Sensors {
 		public void onSensorChanged(SensorEvent event) {
 			switch (event.sensor.getType()) {
 			case Sensor.TYPE_ACCELEROMETER:
+if (true) return;
 				accelerometerValues = event.values.clone();
 				for (AccelerometerListener accelerometerListener: accelerometerListenerList) {
 					accelerometerListener.onEvent(accelerometerValues);
 				}
 				break;
 			case Sensor.TYPE_MAGNETIC_FIELD:
+if (true) return;
 				magneticFieldValues = event.values.clone();
 				break;
 			case Sensor.TYPE_GYROSCOPE:

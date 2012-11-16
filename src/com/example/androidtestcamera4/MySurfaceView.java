@@ -139,12 +139,17 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 				MyApplication.characterManager.draw(canvas);
 				if (drawLocation) {
 					if (locationBitmap == null) {
-						String[] sAddressLines = MyApplication.sensors.getAddressLines();
-						if (sAddressLines != null && sAddressLines.length > 0) {
-							String sLocation = "";
-							for (String sAddressLine: sAddressLines) {
-								sLocation += sAddressLine + " ";
+						String sLocation = MyApplication.characterManager.getPlace();
+						if (sLocation == null) {
+							String[] sAddressLines = MyApplication.sensors.getAddressLines();
+							if (sAddressLines != null && sAddressLines.length > 0) {
+								sLocation = "";
+								for (String sAddressLine: sAddressLines) {
+									sLocation += sAddressLine + " ";
+								}
 							}
+						}
+						if (sLocation != null) {
 							locationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 							locationPaint.setColor(Color.WHITE);
 							locationPaint.setTextSize(24.0f);
@@ -159,7 +164,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 					}
 //					canvas.drawText(sAddress, height, canvas.getHeight() - 12 - 24, textPaint);
 					if (locationBitmap != null) {
-						canvas.drawBitmap(locationBitmap, (int)(locationPaint.getFontMetricsInt().bottom - locationPaint.getFontMetrics().top), canvas.getHeight() - 12 - 24 + locationPaint.getFontMetrics().top, null);
+						canvas.drawBitmap(locationBitmap, (int)(locationPaint.getFontMetricsInt().bottom - locationPaint.getFontMetrics().top) + 80, canvas.getHeight() - 12 - 24 + locationPaint.getFontMetrics().top, null);
 					}
 				}
 				if (drawDate) {
@@ -180,7 +185,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 					}
 //					canvas.drawText(sDate, canvas.getWidth() - width - height, canvas.getHeight() - 12 - 12 - 24, textPaint);
 					if (dateBitmap != null) {
-						canvas.drawBitmap(dateBitmap, canvas.getWidth() - dateBitmap.getWidth() - (int)(datePaint.getFontMetrics().bottom - datePaint.getFontMetrics().top), canvas.getHeight() - 12 - 12 - 24 + datePaint.getFontMetrics().top, datePaint);
+						canvas.drawBitmap(dateBitmap, canvas.getWidth() - dateBitmap.getWidth() - (int)(datePaint.getFontMetrics().bottom - datePaint.getFontMetrics().top) - 80, canvas.getHeight() - 12 - 12 - 24 + datePaint.getFontMetrics().top, datePaint);
 					}
 				}
 			} finally {
@@ -387,9 +392,9 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 		public void onEvent(float[] gyroscopeValues) {
 			if (MyApplication.characterManager.getCharacterMode() == CharacterManager.MODE_FLOAT) {
 				int[] values = new int[3];
-				values[0] = (int)Math.toDegrees(gyroscopeValues[0]) / 2 * 2;
-				values[1] = (int)Math.toDegrees(gyroscopeValues[1]) / 2 * 2;
-				values[2] = (int)Math.toDegrees(gyroscopeValues[2]) / 2 * 2;
+				values[0] = (int)Math.toDegrees(gyroscopeValues[0]) / 3 * 3;
+				values[1] = (int)Math.toDegrees(gyroscopeValues[1]) / 3 * 3;
+				values[2] = (int)Math.toDegrees(gyroscopeValues[2]) / 3 * 3;
 				// 上述 / 2 * 2 は Nexus S 対策。 如何にしても ゴミ 入りぬ。
 				// 上限・下限を設く
 				if (values[0] < -60) {
@@ -411,6 +416,7 @@ MyApplication.characterManager.startMoving(screenWidth, screenHeight, screenWidt
 
 				// 960px ほどにて * 1.0 の
 				double factor = screenWidth / 960.0;
+				factor = factor * 960.0 / 800.0;
 //				factor = screenHeight / 720.0;
 				factor = factor * factor * factor * factor;
 				int x = MyApplication.characterManager.getCharacterCenterX() + (int)(values[0] * factor);
